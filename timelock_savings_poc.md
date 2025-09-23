@@ -32,7 +32,7 @@ uint256 public constant BASIS_POINTS = 10000;
 
 ## Critical Bugs Identified
 
-### 🚨 Bug #1: Parameter Swap in calculateReward Function
+
 
 **Severity**: CRITICAL
 
@@ -86,7 +86,7 @@ function withdraw(uint256 _depositId) external {
 
 ---
 
-### 🚨 Bug #3: Contract Insolvency via Emergency Withdrawal
+
 
 **Severity**: HIGH
 
@@ -133,65 +133,6 @@ uint256 reward = (_amount * BASE_REWARD_RATE) / BASIS_POINTS;
 
 **POC Test**: `testSmallDepositZeroReward()`
 
----
-
-### 🔍 Bug #5: Event Parameter Mismatch
-
-**Severity**: LOW
-
-**Description**: Deposited event emits parameters in wrong order.
-
-**Location**: `TimeLockSavings.sol:47`
-
-**Issue**:
-```solidity
-emit Deposited(msg.sender, userDeposits[msg.sender].length - 1, _amount);
-// Should be: emit Deposited(msg.sender, _amount, userDeposits[msg.sender].length - 1);
-```
-
-**Impact**:
-- Incorrect event logging
-- Frontend/analytics may misinterpret data
-- Debugging difficulties
-
-## Running the POC
-
-### Prerequisites
-
-```bash
-# Install Foundry
-curl -L https://foundry.paradigm.xyz | bash
-foundryup
-
-# Clone and setup
-git clone <repository>
-cd timelock-savings
-forge install
-```
-
-### Execute Tests
-
-```bash
-# Run all tests
-forge test -vv
-
-# Run specific vulnerability tests
-forge test --match-test testCalculateRewardMismatch -vvv
-forge test --match-test testDoubleWithdrawal -vvv
-forge test --match-test testEmergencyWithdrawCausesInsolvency -vvv
-forge test --match-test testSmallDepositZeroReward -vvv
-```
-
-### Test Results
-
-```bash
-Running 4 tests for test/timeLockSavingsTest.t.sol:timeLockSavingsTest
-[PASS] testCalculateRewardMismatch() (gas: 89234)
-[PASS] testDoubleWithdrawal() (gas: 156789)
-[PASS] testEmergencyWithdrawCausesInsolvency() (gas: 78901)
-[PASS] testSmallDepositZeroReward() (gas: 67432)
-Test result: ok. 4 passed; 0 failed; finished in 12.34ms
-```
 
 ## Recommended Fixes
 
@@ -238,27 +179,6 @@ function deposit(uint256 _amount) external {
 }
 ```
 
-### Fix #5: Fix Event Parameter Order
-```solidity
-emit Deposited(msg.sender, _amount, userDeposits[msg.sender].length - 1);
-```
-
-## Risk Assessment
-
-| Bug | Severity | Exploitability | Impact | Risk Score |
-|-----|----------|----------------|--------|------------|
-| Parameter Swap | Critical | High | High | 🔴 9.5/10 |
-| Double Withdrawal | Critical | High | Critical | 🔴 9.8/10 |
-| Emergency Withdrawal | High | Medium | Critical | 🔴 8.5/10 |
-| Integer Truncation | Medium | Low | Medium | 🟡 5.0/10 |
-| Event Mismatch | Low | N/A | Low | 🟢 2.0/10 |
-
-## Conclusion
-
-The TimeLockSavings contract contains multiple critical vulnerabilities that make it unsuitable for production deployment. The most severe issues include parameter mismatching leading to incorrect reward calculations and a double withdrawal vulnerability that allows fund drainage. 
 
 **Recommendation**: Complete code review and extensive testing required before any deployment consideration.
 
-## Disclaimer
-
-This analysis is for educational and security research purposes only. Do not deploy this contract to mainnet without addressing all identified vulnerabilities.
